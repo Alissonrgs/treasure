@@ -1,0 +1,5 @@
+beautifulsoup4==4.6.3
+prettytable==0.7.2
+pyexcel-xls==0.5.8
+pyexcel==0.5.8
+requests==2.19.1
