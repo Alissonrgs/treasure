@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import matplotlib.pyplot as plt
+import pandas as pd
 import pyexcel
 import requests
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 from datetime import datetime
+from io import StringIO
 from prettytable import PrettyTable
 
 INFO = \
@@ -36,7 +39,7 @@ def update_treasure_link():
 
     response = requests.get(URL_HISTORY)
     content = response.content.decode('utf-8')
-    soup = BeautifulSoup(content, "html.parser")
+    soup = bs(content, "html.parser")
     table = soup.find('div', class_="bl-body")
 
     year_list = [span.text[:4] for span in table.find_all('span')]
@@ -69,13 +72,18 @@ def get_treasure_history_data(title, year):
         if sheet_name not in sheets.keys():
             print(f"A planilha {sheet_name} não foi encontrada!")
 
-    print(book[sheet_name].content)
+    # print(book[sheet_name].content)
+    df = pd.read_csv(StringIO(book[sheet_name].csv))
+    df_x = df['Vencimento'][2:]
+    df_y = df['Unnamed: 5'][2:]
+    plt.plot(df_x, df_y)
+    plt.show()
 
 
 def get_treasure_data():
     response = requests.get(URL)
     content = response.content.decode('utf-8')
-    soup = BeautifulSoup(content, "html.parser")
+    soup = bs(content, "html.parser")
     table = soup.find('table', class_='tabelaPrecoseTaxas')
 
     pretty_table = PrettyTable()
