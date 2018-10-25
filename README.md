@@ -1,6 +1,14 @@
 # treasure
 Script para obter informações do tesouro direto
 
+### Requisitos de sistema
+
+Tkinter
+
+```
+sudo apt install python3-tk
+```
+
 ### Obter informações do tesouro direto e preços atuais
 
 #### Comando

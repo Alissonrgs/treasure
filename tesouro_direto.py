@@ -90,6 +90,7 @@ def get_treasure_history_data(title, year, download):
     df.sort_values('DATA', ascending=False, inplace=True)
 
     fig, ax = plt.subplots(figsize=(10, 8))
+    fig.suptitle(sheet_name, fontsize=16)
     ax.plot(df['DATA'], df['PU_BASE'], 'b')
     ax.set_xlabel('DATA')
     ax.set_ylabel('PU BASE')
