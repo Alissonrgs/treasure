@@ -6,7 +6,7 @@ Script para obter informações do tesouro direto
 Tkinter
 
 ```
-sudo apt install python3-tkinter
+sudo apt install python3-tk
 ```
 
 ### Obter informações do tesouro direto e preços atuais
