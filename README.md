@@ -41,7 +41,7 @@ Tesouro Prefixado com Juros Semestrais (NTN-F)
 
 #### Comando
 ```
-python tesouro_direto.py -t LFT -y 2018
+python tesouro_direto.py --title LTN --year 2018 --download
 ```
 
 #### Saída
@@ -403,3 +403,5 @@ Selecione uma planilha: LTN 010125
 | 11/10/2018 | 0.1054              | 0.1066              | 537.33          | 533.73         | 533.52        |
 +------------+---------------------+---------------------+-----------------+----------------+---------------+
 ```
+
+![](images/25_10_2018_LTN_010125_PU_BASE.svg)
