@@ -74,10 +74,21 @@ def get_treasure_history_data(title, year):
 
     # print(book[sheet_name].content)
     df = pd.read_csv(StringIO(book[sheet_name].csv))
-    df_x = df['Vencimento'][2:]
-    df_y = df['Unnamed: 5'][2:]
-    plt.plot(df_x, df_y)
+    df.rename(columns={
+        'Vencimento': 'DATA',
+        'Unnamed: 5': 'PU_BASE'
+    }, inplace=True)
+    df['DATA'] = pd.to_datetime(df['DATA'][1:], format='%d/%m/%Y')
+    df['PU_BASE'] = pd.to_numeric(df['PU_BASE'][1:])
+    df.sort_values('DATA', ascending=False, inplace=True)
+
+    fig, ax = plt.subplots()
+    ax.plot(df['DATA'], df['PU_BASE'], 'b')
+    ax.set_xlabel('DATA')
+    ax.set_ylabel('PU BASE')
+    ax.grid(True)
     plt.show()
+    # plt.savefig(f'{sheet_name}_PU_BASE.png')
 
 
 def get_treasure_data():
