@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import argparse
+import matplotlib.pyplot as plt
+import pandas as pd
 import pyexcel
 import requests
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup as bs
 from datetime import datetime
+from io import StringIO
 from prettytable import PrettyTable
 
 INFO = \
@@ -19,16 +22,22 @@ URL = "http://www.tesouro.fazenda.gov.br/tesouro-direto-precos-e-taxas-dos-titul
 URL_HISTORY = "http://sisweb.tesouro.gov.br/apex/f?p=2031:2:::::"
 TREASURE_LIST = ["LFT", "LTN", "NTN-C", "NTN-B", "NTN-B Principal", "NTN-F"]
 TREASURE_LINK = {treasure: {} for treasure in TREASURE_LIST}
-today = datetime.utcnow()
 
 
 parser = argparse.ArgumentParser(description='Tesouro Direto')
-parser.add_argument('-t', '--title',
+parser.add_argument(
+    '-t', '--title',
     type=str, choices=TREASURE_LIST, help='Uma string representando o código do título')
-parser.add_argument('-i', '--info',
+parser.add_argument(
+    '-i', '--info',
     action='store_true', help='Informações sobre o código de cada tesouro')
-parser.add_argument('-y', '--year',
+parser.add_argument(
+    '-y', '--year',
     type=int, help="Um inteiro representando o ano")
+parser.add_argument(
+    '-d', '--download',
+    action='store_true', help="Adicione para ser feito o download do gráfico"
+)
 
 
 def update_treasure_link():
@@ -36,7 +45,7 @@ def update_treasure_link():
 
     response = requests.get(URL_HISTORY)
     content = response.content.decode('utf-8')
-    soup = BeautifulSoup(content, "html.parser")
+    soup = bs(content, "html.parser")
     table = soup.find('div', class_="bl-body")
 
     year_list = [span.text[:4] for span in table.find_all('span')]
@@ -53,7 +62,7 @@ def update_treasure_link():
             TREASURE_LINK[data.text][year] = f"http://sisweb.tesouro.gov.br/apex/{href}"
 
 
-def get_treasure_history_data(title, year):
+def get_treasure_history_data(title, year, download):
     url = TREASURE_LINK[title][year]
     response = requests.get(url)
     book = pyexcel.get_book(file_type="xls", file_content=response.content)
@@ -71,11 +80,32 @@ def get_treasure_history_data(title, year):
 
     print(book[sheet_name].content)
 
+    df = pd.read_csv(StringIO(book[sheet_name].csv))
+    df.rename(columns={
+        'Vencimento': 'DATA',
+        'Unnamed: 5': 'PU_BASE'
+    }, inplace=True)
+    df['DATA'] = pd.to_datetime(df['DATA'][1:], format='%d/%m/%Y')
+    df['PU_BASE'] = pd.to_numeric(df['PU_BASE'][1:])
+    df.sort_values('DATA', ascending=False, inplace=True)
+
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.plot(df['DATA'], df['PU_BASE'], 'b')
+    ax.set_xlabel('DATA')
+    ax.set_ylabel('PU BASE')
+    ax.grid(True)
+
+    if download:
+        today = datetime.utcnow().strftime("%d_%m_%Y")
+        sheet_name = sheet_name.replace(' ', '_')
+        plt.savefig(f'{today}_{sheet_name}_PU_BASE.svg', format='svg', dpi=1200)
+    plt.show()
+
 
 def get_treasure_data():
     response = requests.get(URL)
     content = response.content.decode('utf-8')
-    soup = BeautifulSoup(content, "html.parser")
+    soup = bs(content, "html.parser")
     table = soup.find('table', class_='tabelaPrecoseTaxas')
 
     pretty_table = PrettyTable()
@@ -105,8 +135,9 @@ if __name__ == "__main__":
     else:
         title = parse.title
         year = parse.year
+        download = parse.download
         if title and year:
             update_treasure_link()
-            get_treasure_history_data(title, year)
+            get_treasure_history_data(title, year, download)
         else:
             print("Você precisa inserir o nome do tesouro e o ano")
